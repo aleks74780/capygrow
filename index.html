@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CapyGrow</title>
+<style>
+:root{--bg:#1a1a2e;--panel:#16213e;--gold:#fbbf24;--orange:#ff8b00;--txt:#e0e0e0;--dim:#a0a0a0;--rad:12px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);height:100vh;width:100vw;display:flex;justify-content:center;align-items:center;overflow:hidden}
+.container{width:100%;max-width:480px;height:100%;display:flex;flex-direction:column;padding:10px;position:relative}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;z-index:5}
+.stats{background:var(--panel);padding:8px 12px;border-radius:var(--rad);display:flex;gap:12px}
+.stat-item{display:flex;flex-direction:column;text-align:center;min-width:52px}
+.stat-label{color:var(--dim);font-size:10px}
+.stat-value{font-weight:bold;color:var(--gold)}
+.lang-switch{background:transparent;border:1px solid var(--dim);color:var(--txt);padding:4px 8px;border-radius:6px;cursor:pointer}
+.tab{display:none;flex:1;flex-direction:column;overflow-y:auto;min-height:0}
+.tab.active{display:flex}
+/* TAP */
+#tab-tap{justify-content:center;align-items:center;position:relative;overflow:hidden}
+.capy-btn{width:300px;height:300px;max-width:85vw;max-height:55vh;border-radius:50%;cursor:pointer;user-select:none;touch-action:none;overflow:hidden;box-shadow:0 0 30px rgba(251,191,36,.35);transition:transform .09s ease}
+.capy-btn.squish{transform:scale(.92)}
+.capy-btn img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.energy-wrap{position:absolute;bottom:6px;width:100%;padding:0 20px}
+.energy-bg{height:10px;background:#333;border-radius:5px;overflow:hidden}
+.energy-fill{height:100%;background:var(--gold);width:100%;transition:width .2s}
+.energy-text{text-align:center;font-size:11px;color:var(--dim);margin-top:3px}
+.sell-btn{margin-top:8px;padding:10px;width:100%;background:var(--panel);border:1px solid var(--gold);color:var(--gold);border-radius:var(--rad);font-weight:bold;cursor:pointer}
+/* OFFLINE BOX */
+#offlineBox{position:absolute;top:8px;left:10px;right:10px;background:var(--panel);border:2px solid var(--gold);border-radius:var(--rad);padding:12px;text-align:center;z-index:10;display:none}
+#offlineBox h4{color:var(--gold);margin-bottom:4px}
+.offline-claim{background:var(--gold);color:#000;border:none;padding:8px 16px;border-radius:8px;font-weight:bold;cursor:pointer;margin-top:8px}
+/* NAV */
+.bottom-nav{display:flex;gap:6px;margin-top:8px;z-index:5}
+.nav-btn{flex:1;padding:11px 2px;background:var(--panel);border:none;color:var(--txt);border-radius:var(--rad);font-weight:bold;cursor:pointer;font-size:13px}
+.nav-btn.active{color:var(--gold);box-shadow:inset 0 -3px 0 var(--gold)}
+/* SHOP */
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 0}
+.shop-item{background:var(--panel);border-radius:var(--rad);padding:14px 10px;text-align:center;cursor:pointer;border:1px solid transparent;transition:transform .09s}
+.shop-item:active{transform:scale(.96)}
+.shop-item.best{border:2px solid var(--gold);position:relative;background:rgba(251,191,36,.08)}
+.shop-item.best::before{content:"ЛУЧШИЙ ТОВАР";position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:bold}
+.cost{color:var(--gold);font-weight:bold}
+.ad-strip{background:#222;color:var(--gold);text-align:center;padding:12px;border-radius:var(--rad);cursor:pointer;border:1px dashed var(--dim)}
+/* REF */
+.card{background:var(--panel);border-radius:var(--rad);padding:15px;margin-bottom:12px}
+.invite-btn{background:var(--orange);color:#fff;border:none;padding:12px;width:100%;border-radius:var(--rad);font-weight:bold;cursor:pointer;margin-top:10px}
+.copy-btn{background:#333;color:var(--txt);border:1px solid var(--dim);padding:12px;width:100%;border-radius:var(--rad);font-weight:bold;cursor:pointer;margin-top:8px}
+.big-num{font-size:20px;font-weight:bold;color:var(--gold);margin:6px 0}
+.pbar{height:7px;background:#333;border-radius:4px;overflow:hidden;margin:8px 0}
+.pbar-fill{height:100%;background:var(--gold);width:0%;transition:width .3s}
+.frow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;font-size:13px}
+/* TASKS */
+.task-card{background:var(--panel);padding:12px;border-radius:var(--rad);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;cursor:pointer}
+.task-card.done{border:1px solid var(--gold);background:rgba(251,191,36,.1)}
+.claim-btn{background:var(--gold);color:#000;border:none;padding:12px;width:100%;border-radius:var(--rad);font-weight:bold;margin-top:10px;cursor:pointer}
+.week-card{border:2px solid var(--orange)}
+.week-btn{background:var(--orange);color:#fff;border:none;padding:10px;width:100%;border-radius:var(--rad);font-weight:bold;cursor:pointer;margin-top:8px}
+.week-btn.cool{background:#444;color:var(--dim);cursor:default}
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;padding:9px 10px;border-bottom:1px solid #333}
+.rank{width:30px;font-weight:bold;color:var(--gold)}
+.lb-name{flex:1;margin-left:10px}
+.lb-score{color:var(--gold);font-weight:bold}
+.my-row{background:rgba(251,191,36,.15)}
+.place-1{background:linear-gradient(90deg,rgba(255,215,0,.35),rgba(255,215,0,.05));border-left:4px solid #ffd700}
+.place-2{background:linear-gradient(90deg,rgba(192,192,192,.3),rgba(192,192,192,.05));border-left:4px solid #c0c0c0}
+.place-3{background:linear-gradient(90deg,rgba(205,127,50,.3),rgba(205,127,50,.05));border-left:4px solid #cd7f50}
+.medal{margin-right:6px}
+#toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:20px;opacity:0;transition:.3s;pointer-events:none;z-index:100}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.float-num{position:absolute;font-weight:bold;color:var(--gold);pointer-events:none;animation:floatUp .8s forwards}
+@keyframes floatUp{to{transform:translateY(-60px);opacity:0}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="stats">
+      <div class="stat-item"><span class="stat-value" id="nug-val">0</span><span class="stat-label" data-i18n="l_nug">САМОРОДКИ</span></div>
+      <div class="stat-item"><span class="stat-value" id="gold-val">0</span><span class="stat-label">GOLD</span></div>
+      <div class="stat-item"><span class="stat-value" id="stars-val">50</span><span class="stat-label">STARS</span></div>
+      <div class="stat-item"><span class="stat-value" id="capy-val">0</span><span class="stat-label">CAPY</span></div>
+    </div>
+    <button class="lang-switch" onclick="toggleLang()">RU/EN</button>
+  </header>
+
+  <!-- TAP -->
+  <div class="tab active" id="tab-tap">
+    <div id="offlineBox">
+      <h4 data-i18n="of_title">⛏ Капибара копала без тебя!</h4>
+      <p style="font-size:13px"><span data-i18n="of_text">Накоплено:</span> <b id="offlineAmount" style="color:var(--gold)">0</b> <span data-i18n="l_nug_small">самородков</span></p>
+      <button class="offline-claim" onclick="claimOffline()" data-i18n="of_btn">Забрать</button>
+    </div>
+    <div class="capy-btn" id="tapBtn"><img src="lvl1.jpg" id="capyImg" alt="Capy" draggable="false"></div>
+    <div class="energy-wrap">
+      <div class="energy-bg"><div class="energy-fill" id="energyBar"></div></div>
+      <div class="energy-text">⚡ <span id="energyVal">1000</span> / <span id="energyMax">1000</span></div>
+      <button class="sell-btn" id="sellBtn" onclick="sellNuggets()" data-i18n="sell_btn">Продать самородки (20 000 = 1 GOLD)</button>
+    </div>
+  </div>
+
+  <!-- SHOP -->
+  <div class="tab" id="tab-shop">
+    <div class="shop-grid">
+      <div class="shop-item" onclick="buyItem('collect')"><p data-i18n="s1">Мгновенный сбор</p><span class="cost">25⭐</span></div>
+      <div class="shop-item" onclick="buyItem('boost')"><p data-i18n="s2">Буст ×2 (1ч)</p><span class="cost">15⭐</span></div>
+      <div class="shop-item" onclick="buyItem('energy')"><p data-i18n="s3">Энергия +500 навсегда</p><span class="cost">10⭐</span></div>
+      <div class="shop-item best" onclick="buyItem('power')"><p data-i18n="s4">Мощность ×2 навсегда</p><span class="cost">150⭐</span></div>
+      <div class="shop-item" onclick="buyItem('skin')"><p data-i18n="s5">Скин Капибары</p><span class="cost">50⭐</span></div>
+    </div>
+    <div class="ad-strip" onclick="watchAd()" data-i18n="adstrip">🎬 Смотри рекламу → +50 энергии</div>
+  </div>
+
+  <!-- REFERRAL -->
+  <div class="tab" id="tab-ref">
+    <div class="card" style="text-align:center">
+      <h3 data-i18n="r_title">Пригласи друга</h3>
+      <p style="color:var(--dim);font-size:13px" data-i18n="r_sub">Получи +1500 GOLD за каждого</p>
+      <div class="big-num"><span id="friendsCount">0</span> / 3 · +4500 GOLD</div>
+      <div class="pbar"><div class="pbar-fill" id="refProgress"></div></div>
+      <p style="font-size:11px;color:var(--dim)" data-i18n="r_contest">Конкурс недели: 5 друзей → 10 000 GOLD</p>
+      <button class="invite-btn" onclick="inviteFriend()" data-i18n="r_btn">ПРИГЛАСИТЬ</button>
+      <button class="copy-btn" onclick="copyRefLink()" data-i18n="copy_link">📋 Скопировать ссылку</button>
+      <p style="font-size:11px;color:var(--dim);margin-top:6px" data-i18n="r_hint">Ссылку можно отправить в любом чате или соцсети</p>
+    </div>
+    <div class="card">
+      <p style="color:var(--dim);font-size:12px;margin-bottom:5px" data-i18n="r_list">Приглашённые друзья:</p>
+      <div id="friendList"><p style="color:var(--dim);font-size:13px" data-i18n="r_empty">Пока никого. Пригласи первого друга!</p></div>
+    </div>
+  </div>
+
+  <!-- TASKS -->
+  <div class="tab" id="tab-tasks">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 data-i18n="t_title">Задания</h3>
+      <span style="font-size:12px;color:var(--dim)"><span id="taskTimer">24:00:00</span></span>
+    </div>
+    <div id="taskList"></div>
+    <button class="claim-btn" onclick="claimRewards()" data-i18n="t_claim">Забрать всё готовое</button>
+
+    <div class="card week-card" style="margin-top:12px">
+      <h3 style="font-size:15px" data-i18n="w_title">📅 Недельный челлендж</h3>
+      <p style="color:var(--dim);font-size:13px;margin:6px 0" data-i18n="w_sub">Поделись игрой в истории — получи +2000 GOLD. Раз в неделю.</p>
+      <button class="week-btn" id="weekBtn" onclick="shareWeekly()" data-i18n="w_btn">Поделиться в историю → +2000 GOLD</button>
+      <p style="font-size:11px;color:var(--dim);margin-top:6px" data-i18n="w_next">Награда снова доступна через: <span id="weekTimer">—</span></p>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="tab" id="tab-lb">
+    <h3 style="padding:8px" data-i18n="lb_title">🏆 Турнирная таблица</h3>
+    <div id="lbList"></div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" data-tab="tab-tap" data-i18n="n_tap">Тап</button>
+    <button class="nav-btn" data-tab="tab-shop" data-i18n="n_shop">Магазин</button>
+    <button class="nav-btn" data-tab="tab-ref" data-i18n="n_ref">Реферал</button>
+    <button class="nav-btn" data-tab="tab-tasks" data-i18n="n_tasks">Задания</button>
+    <button class="nav-btn" data-tab="tab-lb" data-i18n="n_lb">Топ</button>
+  </div>
+</div>
+<div id="toast">…</div>
+
+<script>
+// ===== НАСТРОЙКИ =====
+const SELL_RATE = 20000;        // самородков за 1 GOLD
+const ENERGY_BASE = 1000;       // стартовый максимум энергии
+const ENERGY_REGEN_MS = 2000;   // +1 энергия каждые 2 сек
+const AUTO_RATE = 0.5;          // автодобыча в онлайне: самородков в секунду (0.5 = 1 за 2 сек)
+const OFFLINE_RATE = 0.5;       // самородков в секунду в оффлайне (1 за 2 сек)
+const OFFLINE_CAP_MS = 3 * 3600000; // оффлайн копит максимум 3 часа
+const WEEK_REWARD = 2000;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const BOT_USERNAME = "YOUR_BOT_USERNAME"; // замени на имя бота без @
+const CHANNEL_URL = "https://t.me/your_channel"; // ссылка на твой канал
+
+// ===== Вспомогательные =====
+const $ = id => document.getElementById(id);
+let lang = "ru";
+function L(ru){ return lang==="ru" ? ru : (T.en[ru] || ru); }
+
+const T = {
+ ru:{l_nug:"САМОРОДКИ", l_nug_small:"самородков", sell_btn:"Продать самородки (20 000 = 1 GOLD)", s1:"Мгновенный сбор", s2:"Буст ×2 (1ч)", s3:"Энергия +500 навсегда", s4:"Мощность ×2 навсегда", s5:"Скин Капибары", adstrip:"🎬 Смотри рекламу → +50 энергии", r_title:"Пригласи друга", r_sub:"Получи +1500 GOLD за каждого", r_contest:"Конкурс недели: 5 друзей → 10 000 GOLD", r_btn:"ПРИГЛАСИТЬ", r_hint:"Ссылку можно отправить в любом чате или соцсети", copy_link:"📋 Скопировать ссылку", r_list:"Приглашённые друзья:", r_empty:"Пока никого. Пригласи первого друга!", t_title:"Задания", t_claim:"Забрать всё готовое", lb_title:"🏆 Турнирная таблица", n_tap:"Тап", n_shop:"Магазин", n_ref:"Реферал", n_tasks:"Задания", n_lb:"Топ", w_title:"📅 Недельный челлендж", w_sub:"Поделись игрой в истории — получи +2000 GOLD. Раз в неделю.", w_btn:"Поделиться в историю → +2000 GOLD", w_next:"Награда снова доступна через:", of_title:"⛏ Капибара копала без тебя!", of_text:"Накоплено:", of_btn:"Забрать",
+  taskNames:{sell:"Продать самородки (+500 GOLD)", invite:"Пригласить друга (+1500 GOLD)", ad:"Посмотреть 3 рекламы (+300 GOLD)", exchange:"Обменять 2000 GOLD на 10 CAPY", sub:"Подписаться на канал (+200 GOLD)", buy:"Купить в магазине (+100 GOLD)"}},
+ en:{l_nug:"NUGGETS", l_nug_small:"nuggets", sell_btn:"Sell nuggets (20,000 = 1 GOLD)", s1:"Instant collect", s2:"Boost ×2 (1h)", s3:"Energy +500 forever", s4:"Power ×2 forever", s5:"Capybara skin", adstrip:"🎬 Watch ad → +50 energy", r_title:"Invite a friend", r_sub:"Get +1500 GOLD each", r_contest:"Weekly contest: 5 friends → 10,000 GOLD", r_btn:"INVITE", r_hint:"Share this link in any chat or social network", copy_link:"📋 Copy link", r_list:"Invited friends:", r_empty:"Nobody yet. Invite your first friend!", t_title:"Tasks", t_claim:"Claim all ready", lb_title:"🏆 Leaderboard", n_tap:"Tap", n_shop:"Shop", n_ref:"Referral", n_tasks:"Tasks", n_lb:"Top", w_title:"📅 Weekly challenge", w_sub:"Share the game in your story — get +2000 GOLD. Once a week.", w_btn:"Share in story → +2000 GOLD", w_next:"Reward available again in:", of_title:"⛏ Your capybara kept mining!", of_text:"Collected:", of_btn:"Claim",
+  taskNames:{sell:"Sell nuggets (+500 GOLD)", invite:"Invite a friend (+1500 GOLD)", ad:"Watch 3 ads (+300 GOLD)", exchange:"Exchange 2000 GOLD for 10 CAPY", sub:"Subscribe to channel (+200 GOLD)", buy:"Buy in shop (+100 GOLD)"}}
+};
+
+// ===== СОСТОЯНИЕ =====
+const DEFAULTS = {nuggets:0, gold:0, stars:50, capy:0, energy:ENERGY_BASE, maxEnergy:ENERGY_BASE,
+  level:1, power:1, boostUntil:0, friends:0,
+  tasks:{sell:false, invite:false, ad:0, exchange:false, sub:false, buy:false},
+  resetTime: Date.now()+86400000, shareNext:0, lastSeen: Date.now()};
+let state = JSON.parse(JSON.stringify(DEFAULTS));
+
+// Загрузка сохранения
+try {
+  const raw = localStorage.getItem("capygrow_save");
+  if(raw){ const saved = JSON.parse(raw); state = Object.assign(state, saved); state.tasks = Object.assign({sell:false, invite:false, ad:0, exchange:false, sub:false, buy:false}, saved.tasks||{}); }
+} catch(e){}
+
+// ===== ОФФЛАЙН-ФАРМ =====
+let pendingOffline = 0;
+(function calcOffline(){
+  const now = Date.now();
+  let elapsed = now - (state.lastSeen || now);
+  if(elapsed > OFFLINE_CAP_MS) elapsed = OFFLINE_CAP_MS;
+  if(elapsed > 5000){
+    pendingOffline = Math.floor(elapsed/1000 * OFFLINE_RATE * state.power);
+    state.energy = Math.min(state.maxEnergy, state.energy + Math.floor(elapsed / ENERGY_REGEN_MS));
+    if(pendingOffline > 0){
+      $("offlineAmount").innerText = pendingOffline.toLocaleString();
+      $("offlineBox").style.display = "block";
+    }
+  }
+})();
+
+// Автосохранение
+function saveState(){ state.lastSeen = Date.now(); try{ localStorage.setItem("capygrow_save", JSON.stringify(state)); }catch(e){} }
+setInterval(saveState, 5000);
+window.addEventListener("beforeunload", saveState);
+
+// ===== АВТОДОБЫЧА В ОНЛАЙНЕ =====
+// Капибара копает сама, пока игра открыта. Без траты энергии!
+let autoAcc = 0;
+setInterval(function(){
+  let rate = AUTO_RATE * state.power;
+  if(Date.now() < state.boostUntil) rate *= 2;
+  autoAcc += rate * 1; // за 1 секунду
+  if(autoAcc >= 1){
+    const add = Math.floor(autoAcc);
+    autoAcc -= add;
+    state.nuggets += add;
+    updateUI();
+  }
+}, 1000);
+
+// ===== ТАП (мультитач + анимация прожатия) =====
+const tapBtn = $("tapBtn");
+let squishTimer = null;
+tapBtn.addEventListener("touchstart", function(e){ e.preventDefault(); for(const t of e.changedTouches) tap(t.clientX, t.clientY); }, {passive:false});
+tapBtn.addEventListener("mousedown", function(e){ tap(e.clientX, e.clientY); });
+
+function tap(x, y){
+  if(state.energy <= 0){ toast(L("Нет энергии!")); return; }
+  state.energy--;
+  let gain = 1 * state.power;
+  if(Date.now() < state.boostUntil) gain *= 2;
+  state.nuggets += gain;
+  floatNum("+" + gain, x, y);
+  tapBtn.classList.add("squish");
+  clearTimeout(squishTimer);
+  squishTimer = setTimeout(function(){ tapBtn.classList.remove("squish"); }, 90);
+  updateUI();
+}
+
+function floatNum(txt, x, y){
+  const rect = tapBtn.getBoundingClientRect();
+  const el = document.createElement("div");
+  el.className = "float-num";
+  el.innerText = txt;
+  const px = (x !== undefined) ? x - rect.left : rect.width/2;
+  const py = (y !== undefined) ? y - rect.top : rect.height/2;
+  el.style.left = Math.max(0, px - 10) + "px";
+  el.style.top = Math.max(0, py - 10) + "px";
+  tapBtn.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 800);
+}
+
+// ===== ПРОДАЖА =====
+function sellNuggets(){
+  if(state.nuggets < SELL_RATE){ toast(L("Нужно минимум 20000 самородков")); return; }
+  const g = Math.floor(state.nuggets / SELL_RATE);
+  state.nuggets -= g * SELL_RATE;
+  state.gold += g;
+  if(g > 0) state.tasks.sell = true;
+  toast("+" + g + " GOLD");
+  renderTasks(); updateUI();
+}
+
+function claimOffline(){
+  state.nuggets += pendingOffline;
+  toast("+" + pendingOffline.toLocaleString() + " " + L("самородков"));
+  pendingOffline = 0;
+  $("offlineBox").style.display = "none";
+  updateUI();
+}
+
+// ===== ЭНЕРГИЯ =====
+setInterval(function(){ if(state.energy < state.maxEnergy){ state.energy++; updateUI(); } }, ENERGY_REGEN_MS);
+
+// ===== МАГАЗИН =====
+const PRICES = {collect:25, boost:15, energy:10, power:150, skin:50};
+function buyItem(type){
+  if(state.stars < PRICES[type]){ toast(L("Не хватает звёзд!")); return; }
+  state.stars -= PRICES[type];
+  state.tasks.buy = true;
+  if(type==="collect") state.energy = state.maxEnergy;
+  if(type==="boost") state.boostUntil = Date.now()+3600000;
+  if(type==="energy"){ state.maxEnergy += 500; state.energy = Math.min(state.maxEnergy, state.energy + 500); }
+  if(type==="power") state.power *= 2;
+  if(type==="skin") $("capyImg").src = "lvl" + (Math.floor(Math.random()*40)+1) + ".jpg";
+  toast(L("Покупка успешна!"));
+  renderTasks(); updateUI();
+}
+function watchAd(){
+  state.energy = Math.min(state.maxEnergy, state.energy+50);
+  state.tasks.ad = Math.min(3, state.tasks.ad+1);
+  toast("+50 " + L("энергии"));
+  renderTasks(); updateUI();
+}
+
+// ===== РЕФЕРАЛКА =====
+function refLink(){
+  if(!localStorage.cg_id) localStorage.cg_id = Math.random().toString(36).slice(2,10);
+  return "https://t.me/" + BOT_USERNAME + "?startapp=" + localStorage.cg_id;
+}
+function inviteFriend(){
+  const link = refLink();
+  if(navigator.share){
+    navigator.share({title:"CapyGrow", text:L("Копай капибару вместе!"), url:link})
+      .catch(function(){ navigator.clipboard.writeText(link); toast(L("Ссылка скопирована!")); });
+  } else {
+    navigator.clipboard.writeText(link);
+    toast(L("Ссылка скопирована!"));
+  }
+  addFriend();
+}
+function copyRefLink(){
+  navigator.clipboard.writeText(refLink());
+  toast(L("Ссылка скопирована!"));
+}
+function addFriend(){
+  state.friends++;
+  state.gold += 1500;
+  state.tasks.invite = true;
+  $("friendsCount").innerText = state.friends;
+  $("refProgress").style.width = Math.min(100, state.friends/3*100) + "%";
+  const list = $("friendList");
+  if(state.friends === 1) list.innerHTML = "";
+  const row = document.createElement("div");
+  row.className = "frow";
+  row.innerHTML = "<span>" + L("Игрок") + " #" + state.friends + "</span><span style='color:var(--dim)'>" + L("Lvl") + " 1 · " + L("только что") + "</span>";
+  list.appendChild(row);
+  renderTasks(); updateUI();
+}
+
+// ===== НЕДЕЛЬНЫЙ ШЭРИНГ =====
+function shareWeekly(){
+  const now = Date.now();
+  if(now < state.shareNext){
+    toast(L("Уже получено! Следующий раз через ") + fmtLeft(state.shareNext - now));
+    return;
+  }
+  const link = refLink();
+  if(navigator.share){
+    navigator.share({title:"CapyGrow", text:L("Копай золото с капибарой!"), url:link}).catch(function(){});
+  } else {
+    navigator.clipboard.writeText(L("Копай золото с капибарой! ") + link);
+  }
+  state.shareNext = now + WEEK_MS;
+  state.gold += WEEK_REWARD;
+  toast("+" + WEEK_REWARD + " GOLD");
+  updateWeekUI(); updateUI();
+}
+function fmtLeft(ms){
+  const d = Math.floor(ms/86400000), h = Math.floor(ms%86400000/3600000);
+  return (d ? d + L("д ") : "") + h + L("ч");
+}
+function updateWeekUI(){
+  const btn = $("weekBtn");
+  const now = Date.now();
+  if(now < state.shareNext){
+    btn.classList.add("cool");
+    btn.innerText = L("✅ Получено. Следующий через ") + fmtLeft(state.shareNext - now);
+    $("weekTimer").innerText = fmtLeft(state.shareNext - now);
+  } else {
+    btn.classList.remove("cool");
+    btn.innerText = T[lang].w_btn;
+    $("weekTimer").innerText = "—";
+  }
+}
+setInterval(updateWeekUI, 1000);
+
+// ===== ЗАДАНИЯ =====
+const TASK_IDS = ["sell","invite","ad","exchange","sub","buy"];
+function renderTasks(){
+  const box = $("taskList"); box.innerHTML = "";
+  for(const id of TASK_IDS){
+    const done = (id==="ad") ? state.tasks.ad>=3 : state.tasks[id];
+    const div = document.createElement("div");
+    div.className = "task-card" + (done ? " done" : "");
+    div.onclick = function(){ doTask(id); };
+    const name = T[lang].taskNames[id];
+    let label = name;
+    if(id==="ad" && !done) label = L("Реклама: ") + state.tasks.ad + "/3 — " + name;
+    div.innerHTML = "<span>" + label + "</span><span>" + (done ? "✅" : "") + "</span>";
+    box.appendChild(div);
+  }
+}
+function doTask(id){
+  if(id==="exchange"){
+    if(state.tasks.exchange) return;
+    if(state.gold < 2000){ toast(L("Нужно 2000 GOLD")); return; }
+    state.gold -= 2000; state.capy += 10; state.tasks.exchange = true;
+  } else if(id==="sub"){
+    if(!state.tasks.sub){ window.open(CHANNEL_URL, "_blank"); state.tasks.sub = true; }
+  } else if(id==="sell"){
+    if(state.nuggets >= SELL_RATE){ state.tasks.sell = true; } else { toast(L("Продай хотя бы 20000 самородков")); return; }
+  } else if(id==="invite"){
+    if(state.friends < 1){ toast(L("Сначала пригласи друга")); return; }
+    state.tasks.invite = true;
+  }
+  renderTasks(); updateUI();
+}
+function claimRewards(){
+  let total = 0;
+  const rewards = {sell:500, invite:1500, ad:300, exchange:0, sub:200, buy:100};
+  for(const id of TASK_IDS){
+    const ready = (id==="ad") ? state.tasks.ad>=3 : state.tasks[id];
+    if(!ready) continue;
+    total += rewards[id];
+    if(id==="exchange") toast("+10 CAPY");
+    if(id==="ad") state.tasks.ad = 0;
+    state.tasks[id] = false;
+  }
+  state.gold += total;
+  toast("+" + total + " GOLD");
+  renderTasks(); updateUI();
+}
+setInterval(function(){
+  const diff = state.resetTime - Date.now();
+  if(diff <= 0){
+    state.resetTime = Date.now()+86400000;
+    for(const id of TASK_IDS){ if(id!=="ad") state.tasks[id]=false; }
+    state.tasks.ad = 0;
+    renderTasks();
+  }
+  const h = Math.floor(diff/3600000), m = Math.floor(diff % 3600000 / 60000), s = Math.floor(diff % 60000 / 1000);
+  $("taskTimer").innerText = String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+}, 1000);
+
+// ===== ТОП =====
+const BOTS = [["ШахтёрМиша",42000],["CapyKing",31000],["ГольдФокс",27000],["Копатель77",19000],["ЗолотоКопай",15000],["НаггетЛорд",12000],["CapybaraPro",9000],["Шуршавичок",6500],["МиниКопатель",4000],["Новичок3000",2500]];
+function renderLB(){
+  const box = $("lbList"); box.innerHTML = "";
+  const rows = BOTS.map(function(b){ return {name:b[0], score:b[1], me:false}; });
+  rows.push({name:L("Ты"), score:state.gold, me:true});
+  rows.sort(function(a,b){ return b.score - a.score; });
+  const medals = {1:"🥇", 2:"🥈", 3:"🥉"};
+  rows.forEach(function(r, i){
+    const div = document.createElement("div");
+    const placeClass = i < 3 ? " place-" + (i+1) : "";
+    div.className = "lb-row" + (r.me ? " my-row" : "") + placeClass;
+    const medal = medals[i+1] ? "<span class='medal'>" + medals[i+1] + "</span>" : "";
+    div.innerHTML = "<span class='rank'>" + (i+1) + "</span><span class='lb-name'>" + medal + r.name + "</span><span class='lb-score'>" + r.score.toLocaleString() + "</span>";
+    box.appendChild(div);
+  });
+}
+
+// ===== ЯЗЫК =====
+function applyLang(){
+  document.querySelectorAll("[data-i18n]").forEach(function(el){ el.innerText = T[lang][el.dataset.i18n] || el.innerText; });
+  renderTasks(); renderLB(); updateWeekUI(); updateUI();
+}
+function toggleLang(){ lang = (lang === "ru") ? "en" : "ru"; applyLang(); }
+
+// ===== НАВИГАЦИЯ =====
+document.querySelectorAll(".nav-btn").forEach(function(btn){
+  btn.onclick = function(){
+    document.querySelectorAll(".tab").forEach(function(t){ t.classList.remove("active"); });
+    document.querySelectorAll(".nav-btn").forEach(function(b){ b.classList.remove("active"); });
+    $(btn.dataset.tab).classList.add("active");
+    btn.classList.add("active");
+    if(btn.dataset.tab === "tab-lb") renderLB();
+  };
+});
+
+// ===== UI =====
+function updateUI(){
+  $("nug-val").innerText = Math.floor(state.nuggets).toLocaleString();
+  $("gold-val").innerText = Math.floor(state.gold).toLocaleString();
+  $("stars-val").innerText = state.stars;
+  $("capy-val").innerText = state.capy;
+  $("energyVal").innerText = state.energy;
+  $("energyMax").innerText = state.maxEnergy;
+  $("energyBar").style.width = (state.energy / state.maxEnergy * 100) + "%";
+  $("sellBtn").innerText = L("Продать самородки (20 000 = 1 GOLD)") + " — " + Math.floor(state.nuggets).toLocaleString();
+  $("friendsCount").innerText = state.friends;
+  $("refProgress").style.width = Math.min(100, state.friends/3*100) + "%";
+}
+function toast(msg){
+  const t = $("toast"); t.innerText = msg; t.classList.add("show");
+  setTimeout(function(){ t.classList.remove("show"); }, 2500);
+}
+
+// ===== УРОВНИ =====
+function checkLevel(){
+  const need = state.level * 1000;
+  if(state.gold >= need){
+    state.level++;
+    const img = new Image();
+    img.src = "lvl" + Math.min(state.level, 40) + ".jpg";
+    img.onload = function(){ $("capyImg").src = img.src; toast(L("Уровень ") + state.level + "!"); };
+    img.onerror = function(){ $("capyImg").src = "lvl40.jpg"; };
+  }
+}
+setInterval(checkLevel, 2000);
+
+renderTasks(); renderLB(); updateWeekUI(); updateUI();
+</script>
+</body>
+</html>
