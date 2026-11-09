@@ -19,7 +19,10 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .tab.active{display:flex}
 /* TAP */
 #tab-tap{justify-content:center;align-items:center;position:relative;overflow:hidden}
-.capy-btn{width:300px;height:300px;max-width:85vw;max-height:55vh;border-radius:50%;cursor:pointer;user-select:none;touch-action:none;overflow:hidden;box-shadow:0 0 30px rgba(251,191,36,.35);transition:transform .09s ease}
+.level-center{text-align:center;margin-bottom:8px;z-index:5;position:relative}
+.level-label{display:block;font-size:13px;color:var(--dim);letter-spacing:3px;margin-bottom:2px}
+.level-number{font-size:34px;font-weight:800;color:var(--gold);text-shadow:0 2px 6px rgba(0,0,0,.4)}
+.capy-btn{width:340px;height:340px;max-width:90vw;max-height:48vh;border-radius:50%;cursor:pointer;user-select:none;touch-action:none;overflow:hidden;box-shadow:0 0 30px rgba(251,191,36,.35);transition:transform .09s ease}
 .capy-btn.squish{transform:scale(.92)}
 .capy-btn img{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .energy-wrap{position:absolute;bottom:6px;width:100%;padding:0 20px}
@@ -92,6 +95,10 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
       <h4 data-i18n="of_title">⛏ Капибара копала без тебя!</h4>
       <p style="font-size:13px"><span data-i18n="of_text">Накоплено:</span> <b id="offlineAmount" style="color:var(--gold)">0</b> <span data-i18n="l_nug_small">самородков</span></p>
       <button class="offline-claim" onclick="claimOffline()" data-i18n="of_btn">Забрать</button>
+    </div>
+    <div class="level-center">
+      <span class="level-label" data-i18n="l_level">УРОВЕНЬ</span>
+      <span class="level-number" id="lvl-display">1</span>
     </div>
     <div class="capy-btn" id="tapBtn"><img src="lvl1.jpg" id="capyImg" alt="Capy" draggable="false"></div>
     <div class="energy-wrap">
@@ -183,9 +190,9 @@ let lang = "ru";
 function L(ru){ return lang==="ru" ? ru : (T.en[ru] || ru); }
 
 const T = {
- ru:{l_nug:"САМОРОДКИ", l_nug_small:"самородков", sell_btn:"Продать самородки (20 000 = 1 GOLD)", s1:"Мгновенный сбор", s2:"Буст ×2 (1ч)", s3:"Энергия +500 навсегда", s4:"Мощность ×2 навсегда", s5:"Скин Капибары", adstrip:"🎬 Смотри рекламу → +50 энергии", r_title:"Пригласи друга", r_sub:"Получи +1500 GOLD за каждого", r_contest:"Конкурс недели: 5 друзей → 10 000 GOLD", r_btn:"ПРИГЛАСИТЬ", r_hint:"Ссылку можно отправить в любом чате или соцсети", copy_link:"📋 Скопировать ссылку", r_list:"Приглашённые друзья:", r_empty:"Пока никого. Пригласи первого друга!", t_title:"Задания", t_claim:"Забрать всё готовое", lb_title:"🏆 Турнирная таблица", n_tap:"Тап", n_shop:"Магазин", n_ref:"Реферал", n_tasks:"Задания", n_lb:"Топ", w_title:"📅 Недельный челлендж", w_sub:"Поделись игрой в истории — получи +2000 GOLD. Раз в неделю.", w_btn:"Поделиться в историю → +2000 GOLD", w_next:"Награда снова доступна через:", of_title:"⛏ Капибара копала без тебя!", of_text:"Накоплено:", of_btn:"Забрать",
+ ru:{l_nug:"САМОРОДКИ", l_nug_small:"самородков", l_level:"УРОВЕНЬ", sell_btn:"Продать самородки (20 000 = 1 GOLD)", s1:"Мгновенный сбор", s2:"Буст ×2 (1ч)", s3:"Энергия +500 навсегда", s4:"Мощность ×2 навсегда", s5:"Скин Капибары", adstrip:"🎬 Смотри рекламу → +50 энергии", r_title:"Пригласи друга", r_sub:"Получи +1500 GOLD за каждого", r_contest:"Конкурс недели: 5 друзей → 10 000 GOLD", r_btn:"ПРИГЛАСИТЬ", r_hint:"Ссылку можно отправить в любом чате или соцсети", copy_link:"📋 Скопировать ссылку", r_list:"Приглашённые друзья:", r_empty:"Пока никого. Пригласи первого друга!", t_title:"Задания", t_claim:"Забрать всё готовое", lb_title:"🏆 Турнирная таблица", n_tap:"Тап", n_shop:"Магазин", n_ref:"Реферал", n_tasks:"Задания", n_lb:"Топ", w_title:"📅 Недельный челлендж", w_sub:"Поделись игрой в истории — получи +2000 GOLD. Раз в неделю.", w_btn:"Поделиться в историю → +2000 GOLD", w_next:"Награда снова доступна через:", of_title:"⛏ Капибара копала без тебя!", of_text:"Накоплено:", of_btn:"Забрать",
   taskNames:{sell:"Продать самородки (+500 GOLD)", invite:"Пригласить друга (+1500 GOLD)", ad:"Посмотреть 3 рекламы (+300 GOLD)", exchange:"Обменять 2000 GOLD на 10 CAPY", sub:"Подписаться на канал (+200 GOLD)", buy:"Купить в магазине (+100 GOLD)"}},
- en:{l_nug:"NUGGETS", l_nug_small:"nuggets", sell_btn:"Sell nuggets (20,000 = 1 GOLD)", s1:"Instant collect", s2:"Boost ×2 (1h)", s3:"Energy +500 forever", s4:"Power ×2 forever", s5:"Capybara skin", adstrip:"🎬 Watch ad → +50 energy", r_title:"Invite a friend", r_sub:"Get +1500 GOLD each", r_contest:"Weekly contest: 5 friends → 10,000 GOLD", r_btn:"INVITE", r_hint:"Share this link in any chat or social network", copy_link:"📋 Copy link", r_list:"Invited friends:", r_empty:"Nobody yet. Invite your first friend!", t_title:"Tasks", t_claim:"Claim all ready", lb_title:"🏆 Leaderboard", n_tap:"Tap", n_shop:"Shop", n_ref:"Referral", n_tasks:"Tasks", n_lb:"Top", w_title:"📅 Weekly challenge", w_sub:"Share the game in your story — get +2000 GOLD. Once a week.", w_btn:"Share in story → +2000 GOLD", w_next:"Reward available again in:", of_title:"⛏ Your capybara kept mining!", of_text:"Collected:", of_btn:"Claim",
+ en:{l_nug:"NUGGETS", l_nug_small:"nuggets", l_level:"LEVEL", sell_btn:"Sell nuggets (20,000 = 1 GOLD)", s1:"Instant collect", s2:"Boost ×2 (1h)", s3:"Energy +500 forever", s4:"Power ×2 forever", s5:"Capybara skin", adstrip:"🎬 Watch ad → +50 energy", r_title:"Invite a friend", r_sub:"Get +1500 GOLD each", r_contest:"Weekly contest: 5 friends → 10,000 GOLD", r_btn:"INVITE", r_hint:"Share this link in any chat or social network", copy_link:"📋 Copy link", r_list:"Invited friends:", r_empty:"Nobody yet. Invite your first friend!", t_title:"Tasks", t_claim:"Claim all ready", lb_title:"🏆 Leaderboard", n_tap:"Tap", n_shop:"Shop", n_ref:"Referral", n_tasks:"Tasks", n_lb:"Top", w_title:"📅 Weekly challenge", w_sub:"Share the game in your story — get +2000 GOLD. Once a week.", w_btn:"Share in story → +2000 GOLD", w_next:"Reward available again in:", of_title:"⛏ Your capybara kept mining!", of_text:"Collected:", of_btn:"Claim",
   taskNames:{sell:"Sell nuggets (+500 GOLD)", invite:"Invite a friend (+1500 GOLD)", ad:"Watch 3 ads (+300 GOLD)", exchange:"Exchange 2000 GOLD for 10 CAPY", sub:"Subscribe to channel (+200 GOLD)", buy:"Buy in shop (+100 GOLD)"}}
 };
 
@@ -485,6 +492,7 @@ function updateUI(){
   $("gold-val").innerText = Math.floor(state.gold).toLocaleString();
   $("stars-val").innerText = state.stars;
   $("capy-val").innerText = state.capy;
+  $("lvl-display").innerText = state.level;
   $("energyVal").innerText = state.energy;
   $("energyMax").innerText = state.maxEnergy;
   $("energyBar").style.width = (state.energy / state.maxEnergy * 100) + "%";
